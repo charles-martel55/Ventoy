@@ -639,11 +639,15 @@ int vtoydm_main(int argc, char **argv)
     char filepath[300] = {0};
     char outfile[300] = {0};
 
-    while ((ch = getopt(argc, argv, "s:l:o:d:f:v::i::p::c::h::e::E::")) != -1)
+    while ((ch = getopt(argc, argv, "s:l:o:d:f:v::i::p::c::h::e::E::P:")) != -1)
     {
         if (ch == 'd')
         {
             strncpy(diskname, optarg, sizeof(diskname) - 1);
+        }
+        else if (ch == 'P')
+        {
+            part = atoi(optarg);
         }
         else if (ch == 'f')
         {
@@ -699,6 +703,12 @@ int vtoydm_main(int argc, char **argv)
     if (filepath[0] == 0 || diskname[0] == 0)
     {
         fprintf(stderr, "Must input file and disk\n");
+        return 1;
+    }
+    
+    if (part > 0)
+    {
+        fprintf(stderr, "Invalid part number.\n");
         return 1;
     }
 
