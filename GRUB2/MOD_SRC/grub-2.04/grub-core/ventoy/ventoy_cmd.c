@@ -65,7 +65,6 @@ int g_initrd_img_count = 0;
 int g_valid_initrd_count = 0;
 int g_default_menu_mode = 0;
 int g_filt_dot_underscore_file = 0;
-int g_filt_trash_dir = 1;
 int g_sort_case_sensitive = 0;
 int g_tree_view_menu_style = 0;
 static grub_file_t g_old_file;
@@ -1901,14 +1900,9 @@ static int ventoy_collect_img_files(const char *filename, const struct grub_dirh
             return 0;
         }
 
-        if (g_filt_trash_dir)
+        if (filename[0] == '$' && 0 == grub_strncmp(filename, "$RECYCLE.BIN", 12))
         {
-            if (0 == grub_strncmp(filename, ".trash-", 7) ||
-                0 == grub_strcmp(filename, ".Trashes") ||
-                0 == grub_strncmp(filename, "$RECYCLE.BIN", 12))
-            {
-                return 0;
-            }
+            return 0;
         }
 
         if (g_plugin_image_list == VENTOY_IMG_WHITE_LIST)
@@ -2826,9 +2820,9 @@ static grub_err_t ventoy_cmd_list_img(grub_extcmd_context_t ctxt, int argc, char
     {
         return grub_error(GRUB_ERR_BAD_ARGUMENT, "Must clear image before list");
     }
-
+#if VTOY_CHKDEV
     VTOY_CMD_CHECK(1);
-
+#endif
     g_enumerate_time_checked  = 0;
     g_enumerate_start_time_ms = grub_get_time_ms();
 
@@ -2836,12 +2830,6 @@ static grub_err_t ventoy_cmd_list_img(grub_extcmd_context_t ctxt, int argc, char
     if (strdata && strdata[0] == '1' && strdata[1] == 0)
     {
         g_filt_dot_underscore_file = 1;
-    }
-    
-    strdata = ventoy_get_env("VTOY_FILT_TRASH_DIR");
-    if (strdata && strdata[0] == '0' && strdata[1] == 0)
-    {
-        g_filt_trash_dir = 0;
     }
 
     strdata = ventoy_get_env("VTOY_SORT_CASE_SENSITIVE");
@@ -4226,9 +4214,9 @@ static grub_err_t ventoy_cmd_dynamic_menu(grub_extcmd_context_t ctxt, int argc, 
         debug("Invalid argc %d\n", argc);
         return 0;
     }
-
+#if VTOY_CHKDEV
     VTOY_CMD_CHECK(1);
-
+#endif
     if (args[0][0] == '0')
     {
         if (args[1][0] == '0')
@@ -4986,7 +4974,10 @@ int ventoy_load_part_table(const char *diskname)
 {
     int ret;
     grub_disk_t disk;
+#if VTOY_CHKDEV
     grub_device_t dev;
+    char name[64];
+#endif
     
     g_ventoy_part_info = grub_zalloc(sizeof(ventoy_gpt_info));
     if (!g_ventoy_part_info)
@@ -5007,6 +4998,23 @@ int ventoy_load_part_table(const char *diskname)
 
     grub_disk_read(disk, 0, 0, sizeof(ventoy_gpt_info), g_ventoy_part_info);
     grub_disk_close(disk);
+#if VTOY_CHKDEV
+    grub_snprintf(name, sizeof(name), "%s,1", diskname);
+    dev = grub_device_open(name);
+    if (dev)
+    {
+        /* Check for official Ventoy device */
+        ret = ventoy_check_official_device(dev);
+        grub_device_close(dev);
+
+        if (ret)
+        {
+            return 1;
+        }
+    }
+#endif
+    g_ventoy_disk_part_size[0] = ventoy_get_vtoy_partsize(0);
+    g_ventoy_disk_part_size[1] = ventoy_get_vtoy_partsize(1);
 
     return 0;
 }
@@ -5078,6 +5086,9 @@ static grub_err_t ventoy_cmd_load_part_table(grub_extcmd_context_t ctxt, int arg
     {
         ventoy_prompt_end();
     }
+
+    g_ventoy_disk_part_size[0] = ventoy_get_vtoy_partsize(0);
+    g_ventoy_disk_part_size[1] = ventoy_get_vtoy_partsize(1);
 
     return 0;
 }
