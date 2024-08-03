@@ -1,0 +1,7 @@
+FROM debian:12
+
+RUN dpkg --add-architecture i386; dpkg --add-architecture arm64; dpkg --add-architecture mips64el
+
+RUN apt update; export DEBIAN_FRONTEND=noninteractive
+RUN apt install -y musl-dev musl-dev:i386 musl-dev:arm64 musl-dev:mips64el \
+	cpio xz-utils
