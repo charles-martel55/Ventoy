@@ -30,7 +30,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <linux/fs.h>
+#include <sys/mount.h>
 #include <dirent.h>
 #include "vtoytool.h"
 
