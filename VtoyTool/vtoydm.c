@@ -29,7 +29,6 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <linux/fs.h>
 #include <dirent.h>
 #include "biso.h"
 #include "biso_list.h"
@@ -706,7 +705,7 @@ int vtoydm_main(int argc, char **argv)
         return 1;
     }
     
-    if (part > 0)
+    if (part < 0)
     {
         fprintf(stderr, "Invalid part number.\n");
         return 1;
