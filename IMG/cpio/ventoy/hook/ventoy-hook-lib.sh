@@ -501,7 +501,7 @@ create_ventoy_device_mapper() {
         vterr "Error: no dm module avaliable"
     fi
     
-    $VTOY_PATH/tool/vtoydm -p -f $VTOY_PATH/ventoy_image_map -d $1 > $VTOY_PATH/ventoy_dm_table
+    $VTOY_PATH/tool/vtoydm -p -f $VTOY_PATH/ventoy_image_map -d $1 -P $2 > $VTOY_PATH/ventoy_dm_table
     
     
     vtLevel1=$($CAT /proc/sys/kernel/printk | $AWK '{print $1}')
@@ -514,10 +514,10 @@ create_ventoy_device_mapper() {
         echo 0 $vtLevel2 0 $vtLevel4 > /proc/sys/kernel/printk
     fi
 
-    if [ -z "$2" ]; then
+    if [ -z "$3" ]; then
         $VT_DM_BIN create ventoy $VTOY_PATH/ventoy_dm_table >>$VTLOG 2>&1
     else
-        $VT_DM_BIN "$2" create ventoy $VTOY_PATH/ventoy_dm_table >>$VTLOG 2>&1
+        $VT_DM_BIN "$3" create ventoy $VTOY_PATH/ventoy_dm_table >>$VTLOG 2>&1
     fi
 
     if ventoy_need_dm_patch; then    
@@ -813,6 +813,8 @@ ventoy_udev_disk_common_hook() {
         VTDISK="${1:0:-1}"
     fi
     
+    VTISOPART=$(echo $1 | tr -d -c 1-9)
+    
     if [ -e /vtoy/vtoy ]; then
         VTRWMOD=""
     else
@@ -820,7 +822,7 @@ ventoy_udev_disk_common_hook() {
     fi
     
     # create device mapper for iso image file
-    if create_ventoy_device_mapper "/dev/$VTDISK" $VTRWMOD; then
+    if create_ventoy_device_mapper "/dev/$VTDISK" $VTISOPART $VTRWMOD; then
         vtlog "==== create ventoy device mapper success ===="
     else
         vtlog "==== create ventoy device mapper failed ===="
@@ -836,7 +838,7 @@ ventoy_udev_disk_common_hook() {
             done
         fi
         
-        if create_ventoy_device_mapper "/dev/$VTDISK" $VTRWMOD; then
+        if create_ventoy_device_mapper "/dev/$VTDISK" $VTISOPART $VTRWMOD; then
             vtlog "==== create ventoy device mapper success after retry ===="
         else
             vtlog "==== create ventoy device mapper failed after retry ===="
