@@ -495,7 +495,7 @@ static int vtoy_check_device(ventoy_os_param *param, const char *device)
     }
 }
 
-static int vtoy_print_os_param(ventoy_os_param *param, char *diskname)
+static int vtoy_print_os_param(ventoy_os_param *param, char *diskname, int print_partition_number)
 {
     int cnt = 0;
     char *path = param->vtoy_img_path;
@@ -563,7 +563,15 @@ static int vtoy_print_os_param(ventoy_os_param *param, char *diskname)
             debug("%s not exist \n", diskpath);
         }
 #endif
-        printf("/dev/%s#%s#%s\n", diskname, fs, path);
+	if(print_partition_number)
+	{
+		printf("/dev/%s%u#%s#%s\n", diskname, param->vtoy_disk_part_id, fs, path);
+	}
+	else
+	{
+        	printf("/dev/%s#%s#%s\n", diskname, fs, path);
+        }
+        
         return 0;
     }
     else
@@ -585,6 +593,7 @@ int vtoydump_main(int argc, char **argv)
 {
     int rc;
     int ch;
+    int print_partition_number = 0;
     int print_path = 0;
     int check_ascii = 0;
     int print_fs = 0;
@@ -594,7 +603,7 @@ int vtoydump_main(int argc, char **argv)
     char device[64] = {0};
     ventoy_os_param *param = NULL;
 
-    while ((ch = getopt(argc, argv, "a:c:f:p:t:s:v::")) != -1)
+    while ((ch = getopt(argc, argv, "a:c:f:p:t:s:v::P::")) != -1)
     {
         if (ch == 'f')
         {
@@ -627,6 +636,10 @@ int vtoydump_main(int argc, char **argv)
         {
             print_fs = 1;
             strncpy(filename, optarg, sizeof(filename) - 1);
+        }
+        else if(ch == 'P')
+        {
+	    print_partition_number = 1;
         }
         else
         {
@@ -698,8 +711,8 @@ int vtoydump_main(int argc, char **argv)
     }
     else
     {
-        // print os param, you can change the output format in the function
-        rc = vtoy_print_os_param(param, diskname);
+	// print os param, you can change the output format in the function
+	rc = vtoy_print_os_param(param, diskname, print_partition_number);
     }
 
 end:
