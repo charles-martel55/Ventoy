@@ -79,6 +79,19 @@ get_ventoy_disk_name() {
     fi
 }
 
+get_ventoy_iso_disk_name() {
+    if [ "$VTOY_VLNK_BOOT" = "01" ]; then
+        $VTOY_PATH/tool/vtoydump -t /ventoy/ventoy_os_param
+    else
+        line=$($VTOY_PATH/tool/vtoydump -P -f /ventoy/ventoy_os_param)
+        if [ $? -eq 0 ]; then
+            echo ${line%%#*}
+        else    
+            echo "unknown"
+        fi
+    fi
+}
+
 get_ventoy_iso_name() {
     line=$($VTOY_PATH/tool/vtoydump -f /ventoy/ventoy_os_param)
     if [ $? -eq 0 ]; then
