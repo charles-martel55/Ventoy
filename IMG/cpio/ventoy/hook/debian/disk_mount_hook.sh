@@ -25,15 +25,15 @@ VTPATH_OLD=$PATH; PATH=$BUSYBOX_PATH:$VTOY_PATH/tool:$PATH
 
 wait_for_usb_disk_ready
 
-vtdiskname=$(get_ventoy_disk_name)
+vtdiskname=$(get_ventoy_iso_disk_name)
 if [ "$vtdiskname" = "unknown" ]; then
     vtlog "ventoy disk not found"
     PATH=$VTPATH_OLD
     exit 0
 fi
 
-vtlog "${vtdiskname#/dev/}2 found..."
-$BUSYBOX_PATH/sh $VTOY_PATH/hook/debian/udev_disk_hook.sh "${vtdiskname#/dev/}2"
+vtlog "${vtdiskname#/dev/} found..."
+$BUSYBOX_PATH/sh $VTOY_PATH/hook/debian/udev_disk_hook.sh "${vtdiskname#/dev/}"
 
 if [ -f /ventoy/autoinstall ]; then
     sh /ventoy/hook/default/auto_install_varexp.sh  /ventoy/autoinstall
